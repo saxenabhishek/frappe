@@ -74,7 +74,8 @@
   "route",
   "is_published_field",
   "advanced",
-  "engine"
+  "engine",
+  "migration_hash"
  ],
  "fields": [
   {
@@ -528,6 +529,11 @@
    "fieldname": "index_web_pages_for_search",
    "fieldtype": "Check",
    "label": "Index Web Pages for Search"
+  },
+  {
+   "fieldname": "migration_hash",
+   "fieldtype": "Data",
+   "hidden": 1
   }
  ],
  "icon": "fa fa-bolt",
@@ -609,7 +615,7 @@
    "link_fieldname": "reference_doctype"
   }
  ],
- "modified": "2020-12-10 15:10:09.227205",
+ "modified": "2021-02-03 16:23:37.425633",
  "modified_by": "Administrator",
  "module": "Core",
  "name": "DocType",
