@@ -12,12 +12,13 @@ def execute(filters=None):
 	return columns, data
 
 def get_data(filters=None):
-
+	#todo aks ORM
 	logs = frappe.db.sql("SELECT * FROM `tabTransaction Log` order by creation desc ", as_dict=1)
 	result = []
 	for l in logs:
 		row_index = int(l.row_index)
 		if row_index > 1:
+			#todo aks pypika
 			previous_hash = frappe.db.sql("SELECT chaining_hash FROM `tabTransaction Log` WHERE row_index = {0}".format(row_index - 1))
 			if not previous_hash:
 				integrity = False

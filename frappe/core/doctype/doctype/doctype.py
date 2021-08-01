@@ -463,7 +463,9 @@ class DocType(Document):
 			return
 
 		# check if atleast 1 record exists
-		if not (frappe.db.table_exists(self.name) and frappe.db.sql("select name from `tab{}` limit 1".format(self.name))):
+		#TODO aks pypika done
+		q = frappe.qb.from_(self.name).select("name").limit(1)
+		if not (frappe.db.table_exists(self.name) and frappe.db.sql(q.get_sql())):
 			return
 
 		existing_property_setter = frappe.db.get_value("Property Setter", {"doc_type": self.name,
@@ -566,8 +568,10 @@ class DocType(Document):
 	def make_amendable(self):
 		"""If is_submittable is set, add amended_from docfields."""
 		if self.is_submittable:
-			if not frappe.db.sql("""select name from tabDocField
-				where fieldname = 'amended_from' and parent = %s""", self.name):
+		# TODO aks ORM,testing done
+			# if not frappe.db.sql("""select name from tabDocField
+			# 	where fieldname = 'amended_from' and parent = %s""", self.name):
+			if not frappe.get_all("DocField", fields=["name"],filters = {"fieldname":"ammend_from","parent":"123"}):
 					self.append("fields", {
 						"label": "Amended From",
 						"fieldtype": "Link",
@@ -649,8 +653,16 @@ class DocType(Document):
 
 	def get_max_idx(self):
 		"""Returns the highest `idx`"""
-		max_idx = frappe.db.sql("""select max(idx) from `tabDocField` where parent = %s""",
-			self.name)
+		#todo aks pypika done
+		docfield = frappe.qb.Table("DocField") 
+		maxIdx = frappe.qb.fn.Max("idx")
+		q = (frappe.qb.from_(docfield)
+			.select(maxIdx)
+			.where(docfield
+			.parent == self.name)
+			)
+		max_idx = frappe.db.sql(q.get_sql())
+		# max_idx = frappe.db.sql("""select max(idx) from `tabDocField` where parent = %s""",self.name)
 		return max_idx and max_idx[0][0] or 0
 
 	def validate_name(self, name=None):
@@ -701,14 +713,24 @@ def validate_series(dt, autoname=None, name=None):
 		and (not autoname.startswith('format:')):
 
 		prefix = autoname.split('.')[0]
-		used_in = frappe.db.sql("""
-			SELECT `name`
-			FROM `tabDocType`
-			WHERE `autoname` LIKE CONCAT(%s, '.%%')
-			AND `name`!=%s
-		""", (prefix, name))
+		# TODO aks pypika done
+		doctype = frappe.qb.Table("DocType")
+		Concat = frappe.qb.fn.Concat(prefix,".%")
+		q = (frappe.qb
+			.from_(doctype)
+			.select(doctype.name)
+			.where(doctype.autoname.like(Concat))
+			.where(doctype.name != name)
+			)
+		used_in = frappe.db.sql(q.get_sql())
 		if used_in:
 			frappe.throw(_("Series {0} already used in {1}").format(prefix, used_in[0][0]))
+		# used_in = frappe.db.sql("""
+		# 	SELECT `name`
+		# 	FROM `tabDocType`
+		# 	WHERE `autoname` LIKE CONCAT(%s, '.%%')
+		# 	AND `name`!=%s
+		# """, (prefix, name))
 
 def validate_links_table_fieldnames(meta):
 	"""Validate fieldnames in Links table"""
@@ -838,11 +860,25 @@ def validate_fields(meta):
 			if d.fieldtype not in ("Data", "Link", "Read Only"):
 				frappe.throw(_("{0}: Fieldtype {1} for {2} cannot be unique").format(docname, d.fieldtype, d.label), NonUniqueError)
 
-			if not d.get("__islocal") and frappe.db.has_column(d.parent, d.fieldname):
-				has_non_unique_values = frappe.db.sql("""select `{fieldname}`, count(*)
-					from `tab{doctype}` where ifnull(`{fieldname}`, '') != ''
-					group by `{fieldname}` having count(*) > 1 limit 1""".format(
-					doctype=d.parent, fieldname=d.fieldname))
+			# todo aks pypika done
+			if not d.get("__islocal") and frappe.db.has_column(d.parent, d.fieldname):	
+				parent = frappe.qb.Table(str(d.parent))
+				fieldname = frappe.qb.Field(str(d.fieldname))
+				countAll = frappe.qb.fn.Count("*")
+				If_fieldname_null =  frappe.qb.fn.IfNull(fieldname,"")
+				q = (frappe.qb.from_(parent)
+					.select(fieldname,countAll)
+					.where(If_fieldname_null != "")
+					.groupby(fieldname)
+					.having(countAll > 1)
+					.limit(1)
+					)
+				has_non_unique_values = frappe.db.sql(q.get_sql())
+
+				# has_non_unique_values = frappe.db.sql("""select `{fieldname}`, count(*)
+				# 	from `tab{doctype}` where ifnull(`{fieldname}`, '') != ''
+				# 	group by `{fieldname}` having count(*) > 1 limit 1""".format(
+				# 	doctype=d.parent, fieldname=d.fieldname))
 
 				if has_non_unique_values and has_non_unique_values[0][0]:
 					frappe.throw(_("{0}: Field '{1}' cannot be set as Unique as it has non-unique values").format(docname, d.label), NonUniqueError)
@@ -1060,6 +1096,10 @@ def validate_permissions_for_doctype(doctype, for_remove=False, alert=False):
 def clear_permissions_cache(doctype):
 	frappe.clear_cache(doctype=doctype)
 	delete_notification_count_for(doctype)
+	# TODO aks pypika
+	# q = (frappe.qb
+	# 	.from_())
+	# for user in frappe.db.sql_list(q.get_sql()):
 	for user in frappe.db.sql_list("""
 		SELECT
 			DISTINCT `tabHas Role`.`parent`

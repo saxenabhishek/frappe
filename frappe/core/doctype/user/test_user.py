@@ -68,6 +68,7 @@ class TestUser(unittest.TestCase):
 		delete_contact("_test@example.com")
 		delete_doc("User", "_test@example.com")
 
+		#todo aks ORM
 		self.assertTrue(not frappe.db.sql("""select * from `tabToDo` where owner=%s""",
 			("_test@example.com",)))
 
@@ -85,6 +86,7 @@ class TestUser(unittest.TestCase):
 			["first_name", "email"]),
 				("_Test", "test@example.com"))
 
+		# TODO aks ORM
 		test_user = frappe.db.sql("select * from tabUser where name='test@example.com'",
 			as_dict=True)[0]
 		self.assertEqual(frappe.db.get_value("User", {"email":"test@example.com"}, "*", as_dict=True),

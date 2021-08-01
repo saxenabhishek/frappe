@@ -207,17 +207,18 @@ class CommunicationEmailMixin:
 		"""
 		if not emails:
 			return []
-
-		disabled_users = frappe.db.sql_list("""
-			SELECT
-				email
-			FROM
-				`tabUser`
-			where
-				email in %(emails)s
-				and
-				thread_notify=0
-		""", {'emails': tuple(emails)})
+		# TODO aks ORM done
+		disabled_users = frappe.get_list("User",fields = ["email"],filters = {"email":["in",tuple(emails)],"thread_notify":0})
+		# disabled_users = frappe.db.sql_list("""
+		# 	SELECT
+		# 		email
+		# 	FROM
+		# 		`tabUser`
+		# 	where
+		# 		email in %(emails)s
+		# 		and
+		# 		thread_notify=0
+		# """, {'emails': tuple(emails)})
 		return disabled_users
 
 	@staticmethod
@@ -226,17 +227,18 @@ class CommunicationEmailMixin:
 		"""
 		if not emails:
 			return []
-
-		disabled_users = frappe.db.sql_list("""
-			SELECT
-				email
-			FROM
-				`tabUser`
-			where
-				email in %(emails)s
-				and
-				enabled=0
-		""", {'emails': tuple(emails)})
+		# TODO aks ORM done
+		disabled_users = frappe.get_list("User",fields = ["email"], filters = {"email":["in",tuple(emails)],"enabled":0})
+		# disabled_users = frappe.db.sql_list("""
+		# 	SELECT
+		# 		email
+		# 	FROM
+		# 		`tabUser`
+		# 	where
+		# 		email in %(emails)s
+		# 		and
+		# 		enabled=0
+		# """, {'emails': tuple(emails)})
 		return disabled_users
 
 	def sendmail_input_dict(self, print_html=None, print_format=None,

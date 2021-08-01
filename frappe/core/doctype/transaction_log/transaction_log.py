@@ -14,6 +14,7 @@ class TransactionLog(Document):
 		self.row_index = index
 		self.timestamp = now_datetime()
 		if index != 1:
+			# TODO aks ORM
 			prev_hash = frappe.db.sql(
 				"SELECT `chaining_hash` FROM `tabTransaction Log` WHERE `row_index` = '{0}'".format(index - 1))
 			if prev_hash:
@@ -45,6 +46,7 @@ class TransactionLog(Document):
 
 
 def get_current_index():
+	# TODO aks pypika
 	current = frappe.db.sql("""SELECT `current`
 		FROM `tabSeries`
 		WHERE `name` = 'TRANSACTLOG'

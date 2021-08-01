@@ -23,6 +23,7 @@ class Page(Document):
 			self.name = self.page_name.lower().replace('"','').replace("'",'').\
 				replace(' ', '-')[:20]
 			if frappe.db.exists('Page',self.name):
+				# TODO aks pypika HARD
 				cnt = frappe.db.sql("""select name from tabPage
 					where name like "%s-%%" order by name desc limit 1""" % self.name)
 				if cnt:

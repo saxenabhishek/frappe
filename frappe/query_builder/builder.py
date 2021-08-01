@@ -7,6 +7,7 @@ class Base:
 	terms = terms
 	desc = Order.desc
 	Schema = Schema
+	Interval = terms.Interval
 
 	@staticmethod
 	def Table(table_name: str, *args, **kwargs) -> Table:

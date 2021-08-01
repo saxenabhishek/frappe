@@ -540,8 +540,10 @@ class File(Document):
 		}
 
 	def get_file_data_from_hash(self):
-		for name in frappe.db.sql_list("select name from `tabFile` where content_hash=%s and is_private=%s",
-			(self.content_hash, self.is_private)):
+		# TODO ask ORM testing
+		for name in frappe.db.get_list("File",fields = ["name"],filters = {"content_hash":self.content_hash,"is_private":self.is_private}):
+		# for name in frappe.db.sql_list("select name from `tabFile` where content_hash=%s and is_private=%s",
+			# (self.content_hash, self.is_private)):
 			b = frappe.get_doc('File', name)
 			return {k: b.get(k) for k in frappe.get_hooks()['write_file_keys']}
 		return False
@@ -767,8 +769,10 @@ def get_max_file_size():
 def remove_all(dt, dn, from_delete=False, delete_permanently=False):
 	"""remove all files in a transaction"""
 	try:
-		for fid in frappe.db.sql_list("""select name from `tabFile` where
-			attached_to_doctype=%s and attached_to_name=%s""", (dt, dn)):
+		#TODO aks ORM testing
+		for fid in frappe.db.get_list("File", fields = ["name"], filters={"attached_to_doctype":dt,"attached_to_name":dn}):
+		# for fid in frappe.db.sql_list("""select name from `tabFile` where
+		# 	attached_to_doctype=%s and attached_to_name=%s""", (dt, dn)):
 			if from_delete:
 				# If deleting a doc, directly delete files
 				frappe.delete_doc("File", fid, ignore_permissions=True, delete_permanently=delete_permanently)

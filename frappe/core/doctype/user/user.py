@@ -228,6 +228,7 @@ class User(Document):
 		if not self.roles:
 			return False
 
+		#todo aks pypika testing
 		return len(frappe.db.sql("""select name
 			from `tabRole` where desk_access=1
 				and name in ({0}) limit 1""".format(', '.join(['%s'] * len(self.roles))),
@@ -290,6 +291,7 @@ class User(Document):
 		return link
 
 	def get_other_system_managers(self):
+		#todo aks ORM testing
 		return frappe.db.sql("""select distinct `user`.`name` from `tabHas Role` as `user_role`, `tabUser` as `user`
 			where user_role.role='System Manager'
 				and `user`.docstatus<2
@@ -706,6 +708,7 @@ def has_email_account(email):
 
 @frappe.whitelist(allow_guest=False)
 def get_email_awaiting(user):
+	#todo aks ORM  testing
 	waiting = frappe.db.sql("""select email_account,email_id
 		from `tabUser Email`
 		where awaiting_password = 1
@@ -800,7 +803,7 @@ def remove_user_email_inbox(email_account):
 def ask_pass_update():
 	# update the sys defaults as to awaiting users
 	from frappe.utils import set_default
-
+	# todo aks ORM
 	users = frappe.db.sql("""SELECT DISTINCT(parent) as user FROM `tabUser Email`
 		WHERE awaiting_password = 1""", as_dict=True)
 
@@ -853,6 +856,7 @@ def sign_up(email, full_name, redirect_to):
 		else:
 			return 0, _("Already Registered")
 	else:
+		#TODO aks pypika HARD
 		if frappe.db.sql("""select count(*) from tabUser where
 			HOUR(TIMEDIFF(CURRENT_TIMESTAMP, TIMESTAMP(modified)))=1""")[0][0] > 300:
 
@@ -918,6 +922,7 @@ def user_query(doctype, txt, searchfield, start, page_len, filters):
 		filters.pop('ignore_user_type')
 
 	txt = "%{}%".format(txt)
+	# TODO aks pypika HARD
 	return frappe.db.sql("""SELECT `name`, CONCAT_WS(' ', first_name, middle_name, last_name)
 		FROM `tabUser`
 		WHERE `enabled`=1
@@ -945,6 +950,7 @@ def user_query(doctype, txt, searchfield, start, page_len, filters):
 
 def get_total_users():
 	"""Returns total no. of system users"""
+	#TODO aks pypika 
 	return flt(frappe.db.sql('''SELECT SUM(`simultaneous_sessions`)
 		FROM `tabUser`
 		WHERE `enabled` = 1
@@ -963,6 +969,7 @@ def get_system_users(exclude_users=None, limit=None):
 
 	exclude_users += list(STANDARD_USERS)
 
+	# TODO aks testing pypika
 	system_users = frappe.db.sql_list("""select name from `tabUser`
 		where enabled=1 and user_type != 'Website User'
 		and name not in ({}) {}""".format(", ".join(["%s"]*len(exclude_users)), limit_cond),
@@ -972,6 +979,7 @@ def get_system_users(exclude_users=None, limit=None):
 
 def get_active_users():
 	"""Returns No. of system users who logged in, in the last 3 days"""
+	# TODO aks pypika HARD testing
 	return frappe.db.sql("""select count(*) from `tabUser`
 		where enabled = 1 and user_type != 'Website User'
 		and name not in ({})
@@ -979,11 +987,13 @@ def get_active_users():
 
 def get_website_users():
 	"""Returns total no. of website users"""
+	# TODO aks ORM
 	return frappe.db.sql("""select count(*) from `tabUser`
 		where enabled = 1 and user_type = 'Website User'""")[0][0]
 
 def get_active_website_users():
 	"""Returns No. of website users who logged in, in the last 3 days"""
+		# TODO aks pypika HARD testing
 	return frappe.db.sql("""select count(*) from `tabUser`
 		where enabled = 1 and user_type = 'Website User'
 		and hour(timediff(now(), last_active)) < 72""")[0][0]
