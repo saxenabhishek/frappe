@@ -305,9 +305,14 @@ class DataExporter:
 			if self.all_doctypes:
 				# add child tables
 				for c in self.child_doctypes:
-					for ci, child in enumerate(frappe.db.sql("""select * from `tab{0}`
-						where parent=%s and parentfield=%s order by idx""".format(c['doctype']),
-						(doc.name, c['parentfield']), as_dict=1)):
+					table = frappe.qb.Table(c['doctype'])
+					data_row = (frappe.qb.from_(table)
+						.select("*")
+						.where(table.parent == doc.name)
+						.where(table.parentfield == c['parentfield'])
+						.orderby(table.idx)
+					)
+					for ci, child in enumerate(data_row.run()):
 						self.add_data_row(rows, c['doctype'], c['parentfield'], child, ci)
 
 			for row in rows:
