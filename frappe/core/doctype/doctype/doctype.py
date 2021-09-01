@@ -465,7 +465,7 @@ class DocType(Document):
 			return
 
 		# check if atleast 1 record exists
-		if not (frappe.db.table_exists(self.name) and frappe.db.sql("select name from `tab{}` limit 1".format(self.name))):
+		if not (frappe.db.table_exists(self.name) and frappe.get_list(self.name, fields=["name"], limit=1)):
 			return
 
 		existing_property_setter = frappe.db.get_value("Property Setter", {"doc_type": self.name,
@@ -571,8 +571,7 @@ class DocType(Document):
 	def make_amendable(self):
 		"""If is_submittable is set, add amended_from docfields."""
 		if self.is_submittable:
-			if not frappe.db.sql("""select name from tabDocField
-				where fieldname = 'amended_from' and parent = %s""", self.name):
+			if not frappe.get_all("DocField", fields=["name"], filters={"fieldname": "amended_from", "parent": self.name}):
 					self.append("fields", {
 						"label": "Amended From",
 						"fieldtype": "Link",
@@ -654,6 +653,7 @@ class DocType(Document):
 
 	def get_max_idx(self):
 		"""Returns the highest `idx`"""
+		# TODO
 		max_idx = frappe.db.sql("""select max(idx) from `tabDocField` where parent = %s""",
 			self.name)
 		return max_idx and max_idx[0][0] or 0
@@ -677,6 +677,7 @@ class DocType(Document):
 
 def validate_series(dt, autoname=None, name=None):
 	"""Validate if `autoname` property is correctly set."""
+	from frappe.query_builder.functions import Concat
 	if not autoname:
 		autoname = dt.autoname
 	if not name:
@@ -706,12 +707,13 @@ def validate_series(dt, autoname=None, name=None):
 		and (not autoname.startswith('format:')):
 
 		prefix = autoname.split('.')[0]
-		used_in = frappe.db.sql("""
-			SELECT `name`
-			FROM `tabDocType`
-			WHERE `autoname` LIKE CONCAT(%s, '.%%')
-			AND `name`!=%s
-		""", (prefix, name))
+		doctype = frappe.qb.DocType("DocType")
+		used_in = (frappe.qb
+					.from_(doctype)
+					.select(doctype.name)
+					.where(doctype.autoname.like(Concat(prefix,".%")))
+					.where(doctype.name != name)
+					).run()
 		if used_in:
 			frappe.throw(_("Series {0} already used in {1}").format(prefix, used_in[0][0]))
 
@@ -1093,6 +1095,7 @@ def validate_permissions_for_doctype(doctype, for_remove=False, alert=False):
 def clear_permissions_cache(doctype):
 	frappe.clear_cache(doctype=doctype)
 	delete_notification_count_for(doctype)
+	# TODO
 	for user in frappe.db.sql_list("""
 		SELECT
 			DISTINCT `tabHas Role`.`parent`
