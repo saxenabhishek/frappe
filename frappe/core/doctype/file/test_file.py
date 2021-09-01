@@ -204,8 +204,11 @@ class TestFile(unittest.TestCase):
 
 
 	def delete_test_data(self):
-		for f in frappe.db.sql('''select name, file_name from tabFile where
-			is_home_folder = 0 and is_attachments_folder = 0 order by creation desc'''):
+		for f in frappe.db.get_all("File",
+									fields=["name","file_name"],
+									filters={"is_home_folder": 0,"is_attachments_folder": 0},
+									order_by="creation desc",
+									as_list=True):
 			frappe.delete_doc("File", f[0])
 
 
