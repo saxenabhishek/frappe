@@ -14,8 +14,8 @@ class TransactionLog(Document):
 		self.row_index = index
 		self.timestamp = now_datetime()
 		if index != 1:
-			prev_hash = frappe.db.sql(
-				"SELECT `chaining_hash` FROM `tabTransaction Log` WHERE `row_index` = '{0}'".format(index - 1))
+			# review
+			prev_hash = frappe.db.get_list("Transaction Log", fields=["chaining_hash"], filters={"row_index":str(index-1)}, as_list=True)
 			if prev_hash:
 				self.previous_hash = prev_hash[0][0]
 			else:
@@ -45,6 +45,7 @@ class TransactionLog(Document):
 
 
 def get_current_index():
+	# review
 	current = frappe.db.sql("""SELECT `current`
 		FROM `tabSeries`
 		WHERE `name` = 'TRANSACTLOG'
