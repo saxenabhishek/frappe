@@ -2,11 +2,13 @@
 # Copyright (c) 2017, Frappe Technologies and contributors
 # License: MIT. See LICENSE
 
-from frappe import _
-from frappe.utils import get_fullname, now
-from frappe.model.document import Document
-from frappe.core.utils import set_timeline_doc
 import frappe
+from frappe import _
+from frappe.core.utils import set_timeline_doc
+from frappe.model.document import Document
+from frappe.query_builder import Interval
+from frappe.query_builder.functions import Now
+from frappe.utils import get_fullname, now
 
 class ActivityLog(Document):
 	def before_insert(self):
@@ -44,6 +46,4 @@ def clear_activity_logs(days=None):
 
 	if not days:
 		days = 90
-
-	frappe.db.sql("""delete from `tabActivity Log` where \
-		creation< (NOW() - INTERVAL '{0}' DAY)""".format(days))
+	frappe.db.delete("Activity Log", filters={"creation":("<", Now() - Interval(days=days))})
