@@ -257,7 +257,7 @@ class DocType(Document):
 		parent_list = frappe.db.get_all('DocField', 'parent',
 			dict(fieldtype=['in', frappe.model.table_fields], options=self.name))
 		for p in parent_list:
-			frappe.db.sql('UPDATE `tabDocType` SET modified=%s WHERE `name`=%s', (now(), p.parent))
+			frappe.set_value("DocType", p.parent, "modified", now())
 
 	def scrub_field_names(self):
 		"""Sluggify fieldnames if not set from Label."""
@@ -1095,7 +1095,7 @@ def validate_permissions_for_doctype(doctype, for_remove=False, alert=False):
 def clear_permissions_cache(doctype):
 	frappe.clear_cache(doctype=doctype)
 	delete_notification_count_for(doctype)
-	# TODO
+	# ask gavin
 	for user in frappe.db.sql_list("""
 		SELECT
 			DISTINCT `tabHas Role`.`parent`
