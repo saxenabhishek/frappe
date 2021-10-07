@@ -8,6 +8,7 @@ from frappe.model.document import Document
 from frappe.utils import cint, now_datetime
 import hashlib
 
+
 class TransactionLog(Document):
 	def before_insert(self):
 		index = get_current_index()
@@ -29,27 +30,27 @@ class TransactionLog(Document):
 	def hash_line(self):
 		sha = hashlib.sha256()
 		sha.update(
-			frappe.safe_encode(str(self.row_index)) + \
-			frappe.safe_encode(str(self.timestamp)) + \
-			frappe.safe_encode(str(self.data))
+			frappe.safe_encode(str(self.row_index))
+			+ frappe.safe_encode(str(self.timestamp))
+			+ frappe.safe_encode(str(self.data))
 		)
 		return sha.hexdigest()
 
 	def hash_chain(self):
 		sha = hashlib.sha256()
-		sha.update(
-			frappe.safe_encode(str(self.transaction_hash)) + \
-			frappe.safe_encode(str(self.previous_hash))
-		)
+		sha.update(frappe.safe_encode(str(self.transaction_hash)) + frappe.safe_encode(str(self.previous_hash)))
 		return sha.hexdigest()
 
 
 def get_current_index():
 	# review
-	current = frappe.db.sql("""SELECT `current`
-		FROM `tabSeries`
-		WHERE `name` = 'TRANSACTLOG'
-		FOR UPDATE""")
+	series_table = frappe.qb.DocType("Series")
+	current = (
+		frappe.qb.from_(series_table)
+		.select(series_table.current)
+		.where(series_table.name == "TRANSACTLOG")
+		.for_update()
+	).run()
 	if current and current[0][0] is not None:
 		current = current[0][0]
 
