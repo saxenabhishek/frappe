@@ -220,7 +220,7 @@ class User(Document):
 		role_table = frappe.qb.DocType("Role")
 		return len(
 			frappe.qb.from_(role_table)
-			.select(role_table)
+			.select(role_table.name)
 			.where(role_table.desk_access == 1)
 			.where(role_table.name.isin([d.role for d in self.roles]))
 			.limit(1)
