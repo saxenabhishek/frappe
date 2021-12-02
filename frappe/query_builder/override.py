@@ -1,5 +1,11 @@
 from typing import Any, Callable
 
+from pypika import Query
+from pypika.terms import ValueWrapper
+
+import frappe
+
+
 class Holder():
 	payload = None
 
@@ -40,3 +46,35 @@ class PseudoMethods():
 
 	def __repr__(self) -> str:
 		return f"{self.__class__}<{self.func.__repr__()}>"
+
+
+class RedirectToSanitiseFields(PseudoMethods):
+	@staticmethod
+	def redirect(holder):
+		return SanitiseFields(holder)
+
+
+class SanitiseFields(Holder):
+	def __init__(self, query: Query):
+		super().__init__(query)
+
+	def _sanitise(self, criterion):
+		if hasattr(criterion, "left"):
+			self._sanitise(criterion.left)
+		if hasattr(criterion, "right"):
+			self._sanitise(criterion.right)
+
+		if isinstance(criterion, ValueWrapper):
+			criterion.value = frappe.db.escape(criterion.value)
+
+	def where(self, criterion):
+		self._sanitise(criterion)
+		return self.payload.where(criterion)
+
+	def set(self, field, value):
+		value = frappe.db.escape(value)
+		return self.payload.set(field, value)
+
+	@staticmethod
+	def call_this(module):
+		return RedirectToSanitiseFields(module)

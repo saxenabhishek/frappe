@@ -2,6 +2,7 @@ from pypika import MySQLQuery, Order, PostgreSQLQuery, terms
 from pypika.queries import Schema, Table
 from frappe.utils import get_table_name
 from pypika.terms import Function
+from .override import SanitiseFields
 
 class Base:
 	terms = terms
@@ -26,7 +27,7 @@ class MariaDB(Base, MySQLQuery):
 	def from_(cls, table, *args, **kwargs):
 		if isinstance(table, str):
 			table = cls.DocType(table)
-		return super().from_(table, *args, **kwargs)
+		return SanitiseFields(super().from_(table, *args, **kwargs))
 
 	@classmethod
 	def into(cls, table, *args, **kwargs):

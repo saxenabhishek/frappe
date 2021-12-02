@@ -1,14 +1,14 @@
 from enum import Enum
-from typing import Any, Callable, Dict, Union, get_type_hints
 from importlib import import_module
+from typing import Any, Callable, Dict, Union, get_type_hints
 
 from pypika import Query
 from pypika.queries import Column
+from pypika.terms import PseudoColumn
 
 import frappe
 
 from .builder import MariaDB, Postgres
-from pypika.terms import PseudoColumn
 
 
 class db_type_is(Enum):
