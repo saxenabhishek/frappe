@@ -2,6 +2,7 @@
 # License: MIT. See LICENSE
 
 import json
+import time
 import os
 import sys
 import frappe
@@ -100,6 +101,9 @@ Otherwise, check the server logs and ensure that all the required services are r
 		clear_notifications()
 
 		frappe.publish_realtime("version-update")
+		print("temporarily, sleeping to test things")
+		time.sleep(30)
+		print("sleep over")
 		frappe.flags.in_migrate = False
 	finally:
 		with open(touched_tables_file, 'w') as f:

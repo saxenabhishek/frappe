@@ -56,6 +56,9 @@ def application(request):
 		frappe.rate_limiter.apply()
 		frappe.api.validate_auth()
 
+		if getattr(frappe,"flags") and frappe.flags.in_migrate:
+			frappe.db.begin(read_only=True)
+
 		if request.method == "OPTIONS":
 			response = Response()
 
@@ -100,6 +103,9 @@ def application(request):
 		log_request(request, response)
 		process_response(response)
 		frappe.destroy()
+
+	if getattr(frappe,"flags") and frappe.flags.in_migrate:
+		frappe.db.commit()
 
 	return response
 

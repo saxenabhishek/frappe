@@ -776,8 +776,9 @@ class Database(object):
 		else:
 			return frappe.defaults.get_defaults(parent)
 
-	def begin(self):
-		self.sql("START TRANSACTION")
+	def begin(self, read_only=False):
+		mode = "READ ONLY" if read_only else ""
+		self.sql(f"START TRANSACTION {mode}")
 
 	def commit(self):
 		"""Commit current transaction. Calls SQL `COMMIT`."""
