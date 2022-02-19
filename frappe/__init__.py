@@ -36,6 +36,8 @@ from frappe.query_builder import (
 	patch_query_aggregation,
 )
 
+import frappe
+
 __version__ = '14.0.0-dev'
 
 __title__ = "Frappe Framework"
@@ -1263,7 +1265,13 @@ def make_property_setter(args, ignore_validate=False, validate_fields_for_doctyp
 				{'parent': 'DocField', 'fieldname': args.property}, 'fieldtype') or 'Data'
 
 	if not args.doctype:
-		doctype_list = db.sql_list('select distinct parent from tabDocField where fieldname=%s', args.fieldname)
+		DocField_doctype = frappe.qb.DocType("DocField")
+		doctype_list = (
+						frappe.qb.from_(DocField_doctype)
+						.select(DocField_doctype.parent)
+						.where(DocField_doctype.fieldname == args.fieldname)
+					).run(as_list=True)
+
 	else:
 		doctype_list = [args.doctype]
 
