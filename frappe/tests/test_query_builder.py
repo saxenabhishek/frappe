@@ -2,7 +2,8 @@ import unittest
 from typing import Callable
 
 import frappe
-from frappe.query_builder import Case
+from frappe.query_builder import Case, Table
+from frappe.query_builder.builder import Function
 from frappe.query_builder.custom import ConstantColumn
 from frappe.query_builder.functions import Cast_, Coalesce, CombineDatetime, GroupConcat, Match
 from frappe.query_builder.utils import db_type_is
@@ -253,3 +254,33 @@ class TestBuilderPostgres(unittest.TestCase, TestBuilderBase):
 
 	def test_replace_fields_post(self):
 		self.assertEqual("relname", frappe.qb.Field("table_name").get_sql())
+
+
+class TestMisc(unittest.TestCase):
+	def test_value_of_field(self):
+		Note = frappe.qb.DocType("Note")
+		with self.assertRaises(TypeError) as E:
+			Note.field("`update-x%")
+
+	def test_pseudo_column(self):
+		self.assertEqual(
+			frappe.qb.from_("User").select(frappe.qb.terms.PseudoColumn("ASCII('a')")).get_sql(),
+			"SELECT ASCII('a') FROM `tabUser`",
+		)
+
+	def test_desc_ord(self):
+		self.assertEqual(
+			frappe.qb.from_("bleh").select("name").orderby(frappe.qb.desc).get_sql(),
+			"SELECT `name` FROM `tabbleh` ORDER BY 'DESC'",
+		)
+
+	def test_non_tab_table(self):
+		note = frappe.qb.Table("spl")
+		self.assertEqual(note.get_sql(), "spl")
+		self.assertIsInstance(note, Table)
+
+	def test_custom_func(self):
+		rand_func = frappe.qb.functions("rand", "45")
+		self.assertIsInstance(rand_func, Function)
+		self.assertEqual(rand_func.get_sql(), "rand('45')")
+
