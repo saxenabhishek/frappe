@@ -152,6 +152,13 @@ class TestBuilderBase(object):
 
 
 class TestParameterization(unittest.TestCase):
+	def test_overide_defaults(self):
+		import inspect
+		from frappe.query_builder.builder import terms
+
+		self.assertIn("query_builder/terms.py", inspect.getfile(terms.ValueWrapper))
+		self.assertIn("query_builder/terms.py", inspect.getfile(terms.Function))
+
 	def test_where_conditions(self):
 		DocType = frappe.qb.DocType("DocType")
 		query = (
@@ -164,7 +171,7 @@ class TestParameterization(unittest.TestCase):
 		self.assertIn("param1", params)
 		self.assertEqual(params["param1"], "Administrator' --")
 
-	def test_set_cnoditions(self):
+	def test_set_conditions(self):
 		DocType = frappe.qb.DocType("DocType")
 		query = frappe.qb.update(DocType).set(DocType.value, "some_value")
 
