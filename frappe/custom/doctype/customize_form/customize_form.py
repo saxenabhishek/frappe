@@ -12,6 +12,7 @@ import frappe.translate
 from frappe import _
 from frappe.core.doctype.doctype.doctype import (
 	check_email_append_to,
+	validate_autoincrement_autoname,
 	validate_fields_for_doctype,
 	validate_series,
 )
@@ -159,7 +160,9 @@ class CustomizeForm(Document):
 	def save_customization(self):
 		if not self.doc_type:
 			return
+
 		validate_series(self, self.autoname, self.doc_type)
+		validate_autoincrement_autoname(self)
 		self.flags.update_db = False
 		self.flags.rebuild_doctype_for_global_search = False
 		self.set_property_setters()

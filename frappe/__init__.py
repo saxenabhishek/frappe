@@ -25,7 +25,7 @@ import importlib
 import inspect
 import json
 import sys
-from typing import TYPE_CHECKING, Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 import click
 from werkzeug.local import Local, release_local
@@ -232,7 +232,6 @@ def init(site, sites_path=None, new_site=False):
 	local.cache = {}
 	local.document_cache = {}
 	local.meta_cache = {}
-	local.autoincremented_status_map = {site: -1}
 	local.form_dict = _dict()
 	local.session = _dict()
 	local.dev_server = _dev_server
@@ -436,7 +435,7 @@ def msgprint(
 	if as_table and type(msg) in (list, tuple):
 		out.as_table = 1
 
-	if as_list and type(msg) in (list, tuple) and len(msg) > 1:
+	if as_list and type(msg) in (list, tuple):
 		out.as_list = 1
 
 	if flags.print_messages and out.message:
@@ -974,7 +973,7 @@ def get_precision(doctype, fieldname, currency=None, doc=None):
 	return get_field_precision(get_meta(doctype).get_field(fieldname), doc, currency)
 
 
-def generate_hash(txt=None, length=None):
+def generate_hash(txt: Optional[str] = None, length: Optional[int] = None) -> str:
 	"""Generates random hash for given text + current timestamp + random string."""
 	import hashlib
 	import time
@@ -1926,7 +1925,7 @@ def attach_print(
 
 	if not file_name:
 		file_name = name
-	file_name = file_name.replace(" ", "").replace("/", "-")
+	file_name = cstr(file_name).replace(" ", "").replace("/", "-")
 
 	print_settings = db.get_singles_dict("Print Settings")
 
